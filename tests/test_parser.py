@@ -101,6 +101,26 @@ class ParserHelperTests(unittest.TestCase):
             s = StringStream(bad_doge)
             self.assertRaises(ManyParseException, read_string, s)
 
+    def test_octal_frac_to_decimal(self):
+        self.assertAlmostEqual(0.125, octal_frac_to_decimal("10"))
+
+    def test_read_number(self):
+        professor_doge_patterns = (
+            ("43", 35),
+            ("-1", -1),
+            ("43very5", 35.0 * (8**5)),
+            ("43.10very5", 35.125 * (8**5)),
+            ("43.10", 35.125),
+            ("43.71", 35.890625),
+            ("-43.71", -35.890625)
+        )
+
+        for very_number_string, python_number in professor_doge_patterns:
+            s = StringStream(very_number_string)
+            self.assertAlmostEqual(python_number, read_number(s))
+            # Ensure the whole number string was consumed.
+            self.assertEqual(len(very_number_string), s.pos())
+
 class DSONParserLoadsTests(unittest.TestCase):
     def test_canonical_examples(self):
         """
@@ -122,7 +142,9 @@ class DSONParserLoadsTests(unittest.TestCase):
         )
 
         self.assertEqual(
-            {"foo": 34e3},
+            # Shiba confused, current spec says 42very3 = 34e3, but exponent
+            # should be 10_8 ^ exp_8, or 8_10 ^ exp_10 ?
+            {"foo": 34 * (8**3)},
             loads('such "foo" is 42very3 wow')
         )
 

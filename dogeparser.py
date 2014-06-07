@@ -54,7 +54,7 @@ NUM_OCTAL_DIGITS_FOR_CODE_POINT = 6
 WHITESPACE = " \t\v\r\n"
 OCTAL_CHARS = "01234567"
 NUMBER_LEADING_CHARS = "-1234567890"
-NUMBER_CHARS = "-1234567890veryVERY"
+NUMBER_CHARS = "-1234567890.veryVERY"
 
 VALID_TOKEN_CHARS = 'abcdefghijklmnopqrstuvwxyz,.!?'
 QUOTE = '"'
@@ -186,6 +186,17 @@ def read_string(stream):
 
     return "".join(parsed_string)
 
+def octal_frac_to_decimal(octal_frac_string):
+    """
+    Convert the fractional part of an octal number,
+    as a string, to the floating-point equivalent.
+    """
+    result = 0.0
+    for place, digit in enumerate(octal_frac_string, start=1):
+        result += int(digit) * (8 ** -place)
+
+    return result
+
 def read_number(stream):
     """
     Parse a DSON number out of stream. Return an integer or
@@ -196,15 +207,42 @@ def read_number(stream):
     while not stream.eof() and stream.peek() in NUMBER_CHARS:
         number_chars.append(stream.consume())
 
-    number = "".join(number_chars)
+    number = "".join(number_chars).lower()
 
     if not re.match(r"^-?(0|[1-7][0-7]*)(\.[0-7]+|[0-7]*)((very|VERY)(\+|-)?[0-7]+)?", number):
         raise ManyParseException(stream, "Invalid number {!r}".format(number))
 
-    int_part, _, frac_part = number.lower().partition(".")
-    frac_part, _, exponent = frac_part.partition("very")
+    negative = False
+    if '-' == number[0]:
+        negative = True
+        number = number[1:] # strip off negative sign
 
-    return int(int_part, 8)
+    int_part, dot, frac_part = number.partition(".")
+
+    # Format is [int . frac very exponent]
+    if "." == dot:
+        int_value = int(int_part, 8)
+        frac_part, _, exponent = frac_part.partition("very")
+        frac_value = octal_frac_to_decimal(frac_part)
+
+        # Format is [int . frac], unless very exponent
+        result = (int_value + frac_value)
+
+    else:
+        # Need to further break out int part
+        int_part, _, exponent = int_part.partition("very")
+        # Format is [int], unless very exponent
+        result = int(int_part, 8)
+
+    # Calculate exponent, if applicable
+    if exponent:
+        result *= (8.0 ** int(exponent, 8))
+
+    # Negate, if applicable
+    if negative:
+        result = -result
+
+    return result
 
 def read_value(stream):
     """
