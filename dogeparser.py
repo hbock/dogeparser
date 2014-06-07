@@ -205,7 +205,11 @@ def read_number(stream):
     return int(int_part, 8)
 
 def read_value(stream):
-    # TODO fixme need many types
+    """
+    Scan a value out of stream, returning a tuple ``(value, value_type)``.
+    ``value_type`` is one of :const:`SUCH_STRING`, :const:`SUCH_CONST`,
+    :const`SUCH_NUMBER`, or :const:`SUCH_TOKEN`.
+    """
     strip_whitespace(stream)
 
     char = stream.peek()
@@ -239,6 +243,11 @@ def loadb(b, encoding="utf-8"):
     return loads(b.decode(encoding))
 
 def loads(s):
+    """
+    Deserialize a str (unicode) instance containing a DSON document to a Python object.
+
+    Raises :exc:`ManyParseException` if the document could not be deserialized.
+    """
     stream = StringStream(s)
 
     cur_obj  = None
