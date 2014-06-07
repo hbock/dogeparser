@@ -49,6 +49,8 @@ SUCH_TOKEN  = 1 # token value (so, many, is, wow, etc.)
 SUCH_NUMBER = 2 # numerical
 SUCH_CONST  = 3 # true, false, null
 
+NUM_OCTAL_DIGITS_FOR_CODE_POINT = 6
+
 WHITESPACE = " \t\v\r\n"
 OCTAL_CHARS = "01234567"
 NUMBER_LEADING_CHARS = "-1234567890"
@@ -159,11 +161,11 @@ def read_string(stream):
                 if 'u' == char:
                     digits_found = 0
                     digits = []
-                    while 6 > digits_found and stream.peek() in OCTAL_CHARS:
+                    while NUM_OCTAL_DIGITS_FOR_CODE_POINT > digits_found and stream.peek() in OCTAL_CHARS:
                         digits_found += 1
                         digits.append(stream.consume())
 
-                    if 6 != digits_found:
+                    if NUM_OCTAL_DIGITS_FOR_CODE_POINT  != digits_found:
                         raise ManyParseException(stream, "Not enough digits for Unicode code point!")
 
                     code_point = int("".join(digits), 8)
