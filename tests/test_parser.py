@@ -37,6 +37,17 @@ class ParserHelperTests(unittest.TestCase):
         self.assertEqual("the \r\t\nstring/", read_string(s))
         self.assertEqual("1", s.peek())
 
+    def test_read_string_escape_unicode(self):
+        """ Test octal unicode escape sequences """
+        unicode_test_patterns = (
+            ('"asdf\\u000142"', "asdfb"),
+            ('"\\u074617\\u056366\\u073414"', "福島県")
+        )
+
+        for doge_not_on_leash, ustr in unicode_test_patterns:
+            s = StringStream(doge_not_on_leash)
+            self.assertEqual(ustr, read_string(s))
+
     def test_read_value(self):
         s = StringStream("123 asdf")
 
@@ -65,6 +76,30 @@ class ParserHelperTests(unittest.TestCase):
         val, valtype = read_value(s)
         self.assertEqual(None, val)
         self.assertEqual(SUCH_CONST, valtype)
+
+    def test_read_string_unterminated(self):
+        """ Read string failed due to missing quote terminator """
+        s = StringStream('"asdf')
+        self.assertRaises(ManyParseException, read_string, s)
+
+    def test_read_string_escape_errors(self):
+        """
+        Test invalid escape parameters
+        """
+        bad_doge_samples = (
+            '"asdf \\x d"',
+            '"asdf \\x"',
+            '"asdf \\u5"',      # So few
+            '"asdf \\u56"',     # So few
+            '"asdf \\u567"',    # So few
+            '"asdf \\u1234"',   # So few
+            '"asdf \\u12345"',  # So few
+            '"asdf \\u123459"', # Not an octal digit
+
+        )
+        for bad_doge in bad_doge_samples:
+            s = StringStream(bad_doge)
+            self.assertRaises(ManyParseException, read_string, s)
 
 class DSONParserLoadsTests(unittest.TestCase):
     def test_canonical_examples(self):

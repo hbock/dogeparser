@@ -50,6 +50,7 @@ SUCH_NUMBER = 2 # numerical
 SUCH_CONST  = 3 # true, false, null
 
 WHITESPACE = " \t\v\r\n"
+OCTAL_CHARS = "01234567"
 NUMBER_LEADING_CHARS = "-1234567890"
 NUMBER_CHARS = "-1234567890veryVERY"
 
@@ -142,29 +143,44 @@ def read_string(stream):
 
     parsed_string = []
 
-    while not stream.eof():
+    terminated = False
+
+    while not stream.eof() and not terminated:
         char = stream.peek()
 
         if RSOLIDUS == char:
             stream.consume() # consume the rsolidus
-            char = stream.consume() # consume the next character
+            char = stream.consume() # consume the escaped character
 
             try:
                 parsed_string.append(ESCAPE_CHARS[char])
 
             except KeyError:
-                if "u" == char:
-                    print("WAHHH UNICODE SUX")
+                if 'u' == char:
+                    digits_found = 0
+                    digits = []
+                    while 6 > digits_found and stream.peek() in OCTAL_CHARS:
+                        digits_found += 1
+                        digits.append(stream.consume())
+
+                    if 6 != digits_found:
+                        raise ManyParseException(stream, "Not enough digits for Unicode code point!")
+
+                    code_point = int("".join(digits), 8)
+                    parsed_string.append(chr(code_point))
 
                 else:
                     raise ManyParseException(stream, "Invalid escape character {!r}".format(char))
 
         elif QUOTE == char:
             stream.consume()
-            break
+            terminated = True
 
         else:
             parsed_string.append(stream.consume())
+
+    if stream.eof() and not terminated:
+        raise ManyParseException(stream, "End of stream while scanning for end quote in string!")
 
     return "".join(parsed_string)
 
