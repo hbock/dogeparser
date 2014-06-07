@@ -312,7 +312,6 @@ def loads(s):
                                              "reading object value, got {!r}".format(value))
 
             else:
-                print("Object field {!r} value = {!r}".format(cur_name, value))
                 cur_obj[cur_name] = value
                 state = SO_OBJECT_NEXT
 
@@ -335,7 +334,6 @@ def loads(s):
                                              "Expected tokens 'such', 'so' while "
                                              "reading object value, got {!r}".format(value))
             else:
-                print("array value: {!r}".format(value))
                 cur_obj.append(value)
 
                 state = SO_ARRAY_NEXT
@@ -361,11 +359,9 @@ def loads(s):
         elif SO_OBJECT_NEXT == state:
             token = read_token(stream)
             if token in (",", ".", "!", "?"):
-                print("NEXT!")
                 state = SO_OBJECT_FIELD_NAME
 
             elif "wow" == token:
-                print("WOW! {!r}".format(cur_obj))
                 state = SO_DECREMENT_NEST
 
             else:
