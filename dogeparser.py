@@ -157,7 +157,7 @@ def read_string(stream):
                     print("WAHHH UNICODE SUX")
 
                 else:
-                    raise ManyParseException("Invalid escape character {!r}".format(char))
+                    raise ManyParseException(stream, "Invalid escape character {!r}".format(char))
 
         elif QUOTE == char:
             stream.consume()
@@ -181,7 +181,7 @@ def read_number(stream):
     number = "".join(number_chars)
 
     if not re.match(r"^-?(0|[1-7][0-7]*)(\.[0-7]+|[0-7]*)((very|VERY)(\+|-)?[0-7]+)?", number):
-        raise ManyParseException("Invalid number {!r}".format(number))
+        raise ManyParseException(stream, "Invalid number {!r}".format(number))
 
     int_part, _, frac_part = number.lower().partition(".")
     frac_part, _, exponent = frac_part.partition("very")
@@ -215,7 +215,7 @@ def read_value(stream):
         value_type = SUCH_NUMBER
 
     else:
-        raise ManyParseException("Invalid value start character: {!r}".format(char))
+        raise ManyParseException(stream, "Invalid value start character: {!r}".format(char))
 
     return value, value_type
 
@@ -251,7 +251,7 @@ def loads(s):
 
             # Invalid token
             else:
-                raise ManyParseException("Expected tokens 'such' or 'so', got {!r}!".format(token))
+                raise ManyParseException(stream, "Expected tokens 'such' or 'so', got {!r}!".format(token))
 
         # Create a new object; if an object/array is outstanding, push it on the stack.
         elif SO_NEW_OBJECT == state:
@@ -279,7 +279,7 @@ def loads(s):
                 state = SO_OBJECT_FIELD_VALUE
 
             else:
-                raise ManyParseException("Expected 'is' after field name, got token {!r}!".format(token))
+                raise ManyParseException(stream, "Expected 'is' after field name, got token {!r}!".format(token))
 
         elif SO_OBJECT_FIELD_VALUE == state:
             value, value_type = read_value(stream)
@@ -291,7 +291,8 @@ def loads(s):
                     state = SO_NEW_ARRAY
 
                 else:
-                    raise ManyParseException("Expected tokens 'such', 'so' while "
+                    raise ManyParseException(stream,
+                                             "Expected tokens 'such', 'so' while "
                                              "reading object value, got {!r}".format(value))
 
             else:
@@ -314,7 +315,8 @@ def loads(s):
                     state = SO_DECREMENT_NEST
 
                 else:
-                    raise ManyParseException("Expected tokens 'such', 'so' while "
+                    raise ManyParseException(stream,
+                                             "Expected tokens 'such', 'so' while "
                                              "reading object value, got {!r}".format(value))
             else:
                 print("array value: {!r}".format(value))
