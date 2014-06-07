@@ -17,5 +17,4 @@ obj = dogeparser.loads('such "foo" is "bar". "doge" is "shibe" wow')
 
 Shibe ``dogeparser`` is not production code yet, do not use to make money.
 
-* Floating-point numbers are not implemented correctly (or at all) yet.
 * dson serialization from Python objects is not yet implemented.
