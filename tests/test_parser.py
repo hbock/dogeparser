@@ -170,6 +170,11 @@ class DSONParserLoadsTests(unittest.TestCase):
         self.assertEqual({}, loads('such wow'))
         self.assertEqual({"empty": {}}, loads('such "empty" is such wow wow'))
 
+    def test_empty_array(self):
+        """ Test all kinds of empty arrays """
+        self.assertEqual([], loads('so many'))
+        self.assertEqual([[]], loads('so so many many'))
+
     def test_eof_errors(self):
         """ Test error conditions resulting from an incomplete stream """
 
