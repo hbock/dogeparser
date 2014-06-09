@@ -352,11 +352,12 @@ def loads(s):
             # HACK: Peek ahead; if we have a quote, we expect to read the field name next.
             # Move to that state.
             # TODO: this could be better if we break apart SO_OBJECT_FIELD_NAME
-            if '"' == stream.peek():
+            char = stream.peek()
+            if '"' == char:
                 state = SO_OBJECT_FIELD_NAME
             # If 'w' is next, we hopefully can read 'wow' as the next token.
             # This ends the current new object.
-            elif 'w' == stream.peek():
+            elif 'w' == char:
                 token = read_token(stream)
                 # 'so wow' is an empty object; we're done here!
                 if "wow" == token:
@@ -366,7 +367,8 @@ def loads(s):
                     raise ManyParseException(stream, "Unexpected token {!r} after 'such'; expected 'wow' or string")
 
             else:
-                raise ManyParseException
+                raise ManyParseException(stream, "Unexpected character {!r} after 'such'; "
+                                                 "expected 'wow' or string".format(char))
 
         # Create a new array; if an object/array is outstanding, push it on the stack.
         elif SO_NEW_ARRAY == state:
