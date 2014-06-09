@@ -125,6 +125,12 @@ class StringStream(object):
     def eof(self):
         return self._pos == len(self._string)
 
+    def remainder(self):
+        """
+        :return: Remaining data in stream not already consumed
+        """
+        return self._string[self._pos:]
+
 def strip_whitespace(stream):
     """ Consume leading whitespace in the stream. """
     while not stream.eof() and stream.peek() in WHITESPACE:
@@ -481,6 +487,11 @@ def loads(s):
 
             except IndexError:
                 state = SO_END
+
+    # No more data should remain!
+    strip_whitespace(stream)
+    if not stream.eof():
+        raise ManyParseException(stream, "Extra data after complete DSON document: {!r}".format(stream.remainder()))
 
     return cur_obj
 

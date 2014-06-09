@@ -161,6 +161,16 @@ class DSONParserLoadsTests(unittest.TestCase):
         ret = loads('so so "herp" also so "goddamn" many many and "asdf" and "zcat" also 123 and so "asdf" many many')
         self.assertEqual([["herp", ["goddamn"]], "asdf", "zcat", 83, ["asdf"]], ret)
 
+
+    def test_whitespace_fun(self):
+        test_patterns = (
+            ('     such   wow   ', {}),
+            ('   so 123       many     ', [83])
+        )
+
+        for document, obj in test_patterns:
+            self.assertEqual(obj, loads(document))
+
     def test_nested_arrays_errors(self):
         # Missing 'and' after 'many many'
         self.assertRaises(ManyParseException, loads, 'so so "herp" also so "goddamn" many many "asdf" and "zcat" also 123 and so "asdf" many many')
@@ -188,8 +198,31 @@ class DSONParserLoadsTests(unittest.TestCase):
             'such',       # missing field name
             'such "doge"'
             'such "doge" is'
-            'such "doge" is "very"'
+            'such "doge" is "very"',
         )
 
         for incomplete_document in incomplete_document_list:
             self.assertRaises(ManyParseException, loads, incomplete_document)
+
+    def test_invalid_document_errors(self):
+        invalid_document_list = (
+            'such wer is 123 wow', # invalid token after 'such'
+            'such 123', # number after 'such'
+            'such 123 is 123 wow',
+            'such "doge" is many', # want 'wow' to end object
+        )
+        for document in invalid_document_list:
+            self.assertRaises(ManyParseException, loads, document)
+
+    def test_extra_data_after_document_errors(self):
+        invalid_document_list = (
+            # Extraneous data
+            'so 1234 many such wow',
+            'so 1234 many so many',
+            'so 1234 many 1234'
+        )
+        for document in invalid_document_list:
+            with self.assertRaises(ManyParseException) as cm:
+                loads(document)
+
+            self.assertIn("Extra data after", cm.exception.msg)
