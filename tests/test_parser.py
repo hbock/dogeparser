@@ -177,6 +177,13 @@ class DSONParserLoadsTests(unittest.TestCase):
             'so "shib',   # unterminated string
             'so',         # missing values
             'so "shiba"'  # missing 'many'
+            'so "shiba" and'  # missing 'many'
+            'so "shiba" and 1'
+            'so 43very'   # missing exponent
+            'such',       # missing field name
+            'such "doge"'
+            'such "doge" is'
+            'such "doge" is "very"'
         )
 
         for incomplete_document in incomplete_document_list:
