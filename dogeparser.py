@@ -97,6 +97,11 @@ class ManyParseException(ValueError):
     def __str__(self):
         return self.msg
 
+class VeryUnexpectedEndException(ManyParseException):
+    """
+    Error raised when document end was found while expecting more data.
+    """
+
 class StringStream(object):
     """
     Helper class for viewing an immutable string for parsing.
@@ -141,7 +146,7 @@ def read_token(stream):
     strip_whitespace(stream)
 
     if stream.eof():
-        raise ManyParseException(stream, "Encountered EOF while scanning for token")
+        raise VeryUnexpectedEndException(stream, "Encountered EOF while scanning for token")
 
     pos = stream.pos()
     while not stream.eof():
@@ -163,7 +168,7 @@ def read_string(stream):
     strip_whitespace(stream)
 
     if stream.eof():
-        raise ManyParseException(stream, "Expected string, found eof instead")
+        raise VeryUnexpectedEndException(stream, "Encountered EOF while scanning for string")
 
     elif '"' != stream.peek():
         raise ManyParseException(stream, "Expected quote character; got {!r} instead.".format(stream.peek()))
@@ -209,7 +214,7 @@ def read_string(stream):
             parsed_string.append(stream.consume())
 
     if stream.eof() and not terminated:
-        raise ManyParseException(stream, "End of stream while scanning for end quote in string!")
+        raise VeryUnexpectedEndException(stream, "End of stream while scanning for end quote in string!")
 
     return "".join(parsed_string)
 
@@ -232,7 +237,7 @@ def read_number(stream):
     number_chars = []
 
     if stream.eof():
-        raise ManyParseException(stream, "Encountered EOF while scanning number")
+        raise VeryUnexpectedEndException(stream, "Encountered EOF while scanning number")
 
     while not stream.eof() and stream.peek() in NUMBER_CHARS:
         number_chars.append(stream.consume())
@@ -283,7 +288,7 @@ def read_value(stream):
     strip_whitespace(stream)
 
     if stream.eof():
-        raise ManyParseException(stream, "Encountered EOF while scanning for a value")
+        raise VeryUnexpectedEndException(stream, "Encountered EOF while scanning for a value")
 
     char = stream.peek()
     if '"' == char:
@@ -359,6 +364,10 @@ def loads(s):
             cur_obj = {}
 
             strip_whitespace(stream)
+
+            if stream.eof():
+                raise VeryUnexpectedEndException(stream, "Encountered EOF while scanning for string or 'wow'")
+
             # HACK: Peek ahead; if we have a quote, we expect to read the field name next.
             # Move to that state.
             # TODO: this could be better if we break apart SO_OBJECT_FIELD_NAME

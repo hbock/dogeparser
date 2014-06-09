@@ -205,18 +205,18 @@ class DSONParserLoadsTests(unittest.TestCase):
         incomplete_document_list = (
             'so "shib',   # unterminated string
             'so',         # missing values
-            'so "shiba"'  # missing 'many'
-            'so "shiba" and'  # missing 'many'
-            'so "shiba" and 1'
-            'so 43very'   # missing exponent
+            'so "shiba"',  # missing 'many'
+            'so "shiba" and',  # missing 'many'
+            'so "shiba" and 1',
+            'so 43very',   # missing exponent
             'such',       # missing field name
-            'such "doge"'
-            'such "doge" is'
+            'such "doge"',
+            'such "doge" is',
             'such "doge" is "very"',
         )
 
         for incomplete_document in incomplete_document_list:
-            self.assertRaises(ManyParseException, loads, incomplete_document)
+            self.assertRaises(VeryUnexpectedEndException, loads, incomplete_document)
 
     def test_invalid_document_errors(self):
         invalid_document_list = (
