@@ -149,17 +149,8 @@ def read_token(stream):
         raise VeryUnexpectedEndException(stream, "Encountered EOF while scanning for token")
 
     pos = stream.pos()
-    while not stream.eof():
-        char = stream.peek()
-
-        if char in VALID_TOKEN_CHARS:
-            stream.consume()
-
-        elif char in WHITESPACE or QUOTE == char:
-            break
-
-        else:
-            raise ManyParseException(stream, "Unexpected char {!r} while scanning for token!".format(char))
+    while not stream.eof() and stream.peek() in VALID_TOKEN_CHARS:
+        stream.consume()
 
     return stream.slice(pos)
 
