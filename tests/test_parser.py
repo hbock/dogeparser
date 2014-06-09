@@ -253,3 +253,18 @@ class DSONParserLoadsTests(unittest.TestCase):
                 loads(document)
 
             self.assertIn("Extra data after", cm.exception.msg)
+
+    def test_compact_formatting(self):
+        """
+        Some doge don't like whitespace, we can accomodate
+        """
+        test_patterns = (
+            ('such"1234"is yes wow', {"1234":True}),
+            ('such"1234"is12wow', {"1234":10}),
+            ('so12many', [10]),
+            ('so1and2also3and5many', [1,2,3,5]),
+            ('such"help"is5,"derp"is4wow', {"help":5, "derp":4})
+        )
+
+        for document, obj in test_patterns:
+            self.assertEqual(obj, loads(document))
