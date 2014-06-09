@@ -149,9 +149,23 @@ class DSONParserLoadsTests(unittest.TestCase):
             loads('such "foo" is 42very3 wow')
         )
 
+    def test_integral_object(self):
+        """ Test documents that aren't lists or objects """
+        test_patterns = (
+            ('10', 8),
+            ('"very"', "very"),
+            ('empty', None),
+            ('yes', True),
+            ('no', False)
+        )
+
+        for document, obj in test_patterns:
+            self.assertEqual(obj, loads(document))
+
     def test_single_object(self):
         self.assertEqual({"asdf":"derp", "andy\t": "lol"},
                          loads('    such "asdf" is "derp"! "andy\\t" is "lol" wow   '))
+
 
     def test_object_with_array(self):
         self.assertEqual({"pradeep":"yo man", "doge": [1,2,3]},
@@ -216,10 +230,21 @@ class DSONParserLoadsTests(unittest.TestCase):
 
     def test_extra_data_after_document_errors(self):
         invalid_document_list = (
-            # Extraneous data
+            # EOD after array
             'so 1234 many such wow',
             'so 1234 many so many',
-            'so 1234 many 1234'
+            'so 1234 many 1234',
+
+            # EOD after object
+            'such "wow" is 123 wow 1234',
+            'such "wow" is 123 wow so many',
+            'such "wow" is 123 wow "hello"'
+
+            # EOD after integral
+            '1234 so many',
+            '"such" such wow',
+            'yes such wow',
+            'empty such "shibe" is "inu" wow'
         )
         for document in invalid_document_list:
             with self.assertRaises(ManyParseException) as cm:

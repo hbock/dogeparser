@@ -333,14 +333,18 @@ def loads(s):
         if SO_START == state:
             cur_name = None
 
-            token = read_token(stream)
+            val, val_type = read_value(stream)
+            # single value; go directly to end
+            if SUCH_TOKEN != val_type:
+                state = SO_END
+                cur_obj = val
 
             # Start object
-            if "such" == token:
+            elif "such" == val:
                 state = SO_NEW_OBJECT
 
             # Start array
-            elif "so" == token:
+            elif "so" == val:
                 state = SO_NEW_ARRAY
 
             # Invalid token
