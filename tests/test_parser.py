@@ -25,7 +25,8 @@ class ParserHelperTests(unittest.TestCase):
         self.assertEqual("so", read_token(s))
         self.assertEqual("many", read_token(s))
         self.assertEqual("tokens", read_token(s))
-        self.assertEqual("", read_token(s))
+        # EOF, must raise exception
+        self.assertRaises(ManyParseException, read_token, s)
 
     def test_read_string(self):
         s = StringStream("   \"the string\"1a")
@@ -163,3 +164,20 @@ class DSONParserLoadsTests(unittest.TestCase):
     def test_nested_arrays_errors(self):
         # Missing 'and' after 'many many'
         self.assertRaises(ManyParseException, loads, 'so so "herp" also so "goddamn" many many "asdf" and "zcat" also 123 and so "asdf" many many')
+
+    def test_empty_object(self):
+        """ Test all kinds of empty objects """
+        self.assertEqual({}, loads('such wow'))
+        self.assertEqual({"empty": {}}, loads('such "empty" is such wow wow'))
+
+    def test_eof_errors(self):
+        """ Test error conditions resulting from an incomplete stream """
+
+        incomplete_document_list = (
+            'so "shib',   # unterminated string
+            'so',         # missing values
+            'so "shiba"'  # missing 'many'
+        )
+
+        for incomplete_document in incomplete_document_list:
+            self.assertRaises(ManyParseException, loads, incomplete_document)

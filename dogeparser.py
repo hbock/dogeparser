@@ -43,6 +43,22 @@ SO_ARRAY_NEXT         = 7 # Inside an array; expect "also", "and", or "many"
 SO_DECREMENT_NEST     = 8 # Pop container object off stack, process child
 SO_END                = 9 # last object processed; no more data should be available
 
+_STATE_NAME_MAP = {
+    SO_START: "START",
+    SO_NEW_OBJECT: "NEW_OBJECT",
+    SO_OBJECT_FIELD_NAME: "OBJECT_FIELD_NAME",
+    SO_OBJECT_FIELD_VALUE: "OBJECT_FIELD_VALUE",
+    SO_OBJECT_NEXT: "OBJECT_NEXT",
+    SO_NEW_ARRAY: "NEW_ARRAY",
+    SO_ARRAY_VALUE: "ARRAY_VALUE",
+    SO_ARRAY_NEXT: "ARRAY_NEXT",
+    SO_DECREMENT_NEST: "DECREMENT_NEST",
+    SO_END: "END"
+}
+
+def get_state_name(state):
+    return _STATE_NAME_MAP.get(state, "<<Such unknown state wow>>")
+
 ## Value types
 SUCH_STRING = 0 # "asfd"
 SUCH_TOKEN  = 1 # token value (so, many, is, wow, etc.)
@@ -117,6 +133,9 @@ def strip_whitespace(stream):
 def read_token(stream):
     """ Read a token from the stream, discarding leading whitespace. """
     strip_whitespace(stream)
+
+    if stream.eof():
+        raise ManyParseException(stream, "Encountered EOF while scanning for token")
 
     pos = stream.pos()
     while not stream.eof():
@@ -204,6 +223,9 @@ def read_number(stream):
     """
     number_chars = []
 
+    if stream.eof():
+        raise ManyParseException(stream, "Encountered EOF while scanning number")
+
     while not stream.eof() and stream.peek() in NUMBER_CHARS:
         number_chars.append(stream.consume())
 
@@ -252,6 +274,9 @@ def read_value(stream):
     """
     strip_whitespace(stream)
 
+    if stream.eof():
+        raise ManyParseException(stream, "Encountered EOF while scanning for a value")
+
     char = stream.peek()
     if '"' == char:
         value = read_string(stream)
@@ -296,7 +321,7 @@ def loads(s):
     state = SO_START
     object_stack = deque()
 
-    while not stream.eof() and SO_END != state:
+    while SO_END != state:
         if SO_START == state:
             cur_name = None
 
@@ -309,10 +334,6 @@ def loads(s):
             # Start array
             elif "so" == token:
                 state = SO_NEW_ARRAY
-
-            # No more tokens, we're done here.
-            elif "" == token:
-                break
 
             # Invalid token
             else:
