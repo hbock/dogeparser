@@ -17,6 +17,7 @@ class StringStreamTests(unittest.TestCase):
         self.assertEqual(2, s.pos())
         self.assertEqual("as", s.slice(0))
         self.assertEqual("s", s.slice(1))
+        self.assertEqual("df jkl;", s.remainder())
 
 class ParserHelperTests(unittest.TestCase):
     def test_read_token(self):
@@ -27,6 +28,7 @@ class ParserHelperTests(unittest.TestCase):
         self.assertEqual("tokens", read_token(s))
         # EOF, must raise exception
         self.assertRaises(ManyParseException, read_token, s)
+        self.assertEqual("", s.remainder())
 
     def test_read_string(self):
         s = StringStream("   \"the string\"1a")
@@ -238,7 +240,7 @@ class DSONParserLoadsTests(unittest.TestCase):
             # EOD after object
             'such "wow" is 123 wow 1234',
             'such "wow" is 123 wow so many',
-            'such "wow" is 123 wow "hello"'
+            'such "wow" is 123 wow "hello"',
 
             # EOD after integral
             '1234 so many',
