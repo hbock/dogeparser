@@ -159,11 +159,13 @@ def read_string(stream):
     if stream.eof():
         raise ManyParseException(stream, "Expected string, found eof instead")
 
-    elif '"' != stream.consume():
+    elif '"' != stream.peek():
         raise ManyParseException(stream, "Expected quote character; got {!r} instead.".format(stream.peek()))
 
-    parsed_string = []
+    # Consume the quote
+    stream.consume()
 
+    parsed_string = []
     terminated = False
 
     while not stream.eof() and not terminated:
@@ -345,7 +347,26 @@ def loads(s):
                 object_stack.append((cur_obj, cur_name))
 
             cur_obj = {}
-            state = SO_OBJECT_FIELD_NAME
+
+            strip_whitespace(stream)
+            # HACK: Peek ahead; if we have a quote, we expect to read the field name next.
+            # Move to that state.
+            # TODO: this could be better if we break apart SO_OBJECT_FIELD_NAME
+            if '"' == stream.peek():
+                state = SO_OBJECT_FIELD_NAME
+            # If 'w' is next, we hopefully can read 'wow' as the next token.
+            # This ends the current new object.
+            elif 'w' == stream.peek():
+                token = read_token(stream)
+                # 'so wow' is an empty object; we're done here!
+                if "wow" == token:
+                    state = SO_DECREMENT_NEST
+
+                else:
+                    raise ManyParseException(stream, "Unexpected token {!r} after 'such'; expected 'wow' or string")
+
+            else:
+                raise ManyParseException
 
         # Create a new array; if an object/array is outstanding, push it on the stack.
         elif SO_NEW_ARRAY == state:
