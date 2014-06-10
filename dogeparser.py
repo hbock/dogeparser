@@ -500,12 +500,22 @@ def loads(s):
     return cur_obj
 
 def main():
-    loads("123")
-    #loads('    such "asdf" is such "zcat" is "wow" wow wow   ')
-    #loads('so "asdf" and "zcat" also 123 and so "asdf" many many')
-    loads('so so "herp" also so "goddamn" many many "asdf" and "zcat" also 123 and so "asdf" many many')
-    #print(loads('so "asdf" "jkl;" many'))
+    import sys
+    import pprint
 
+    line = sys.stdin.readline()
+    while "" != line:
+        try:
+            pprint.pprint(loads(line))
+
+        except ManyParseException as err:
+            print(err)
+
+        line = sys.stdin.readline()
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+
+    except KeyboardInterrupt:
+        pass
