@@ -345,7 +345,7 @@ def loads(s):
 
             # Invalid token
             else:
-                raise ManyParseException(stream, "Expected tokens 'such' or 'so', got {!r}!".format(token))
+                raise ManyParseException(stream, "Expected tokens 'such' or 'so', got {!r}!".format(val))
 
         # Create a new object; if an object/array is outstanding, push it on the stack.
         elif SO_NEW_OBJECT == state:
